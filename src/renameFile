@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""renameFile module
+
+This program renames files with consecutive numbers.
+
+"""
+
+from __future__ import print_function
+
+_description = "This program renames files with consecutive numbers."
+
+#standard library
+import sys
+import os
+import os.path
+import optparse
+import math
+
+
+__author__ = "Christian Felder <webmaster@bsm-felder.de>"
+__date__ = "2014-06-12"
+__version__ = "0.0.1"
+__copyright__ = """Copyright 2014, Christian Felder
+
+This file is part of renameFile, a script to rename files with consecutive
+numbers. Visit https://code.bsm-felder.de for the latest version.
+
+renameFile is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+renameFile is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with renameFile. If not, see <http://www.gnu.org/licenses/>.
+
+"""
+
+if __name__ == "__main__":
+    prog = os.path.basename(sys.argv[0])
+    parser = optparse.OptionParser("%prog [options] {FILE 1} [... {FILE N}] " +
+                                   "{NEWFILE}", version="%s %s"
+                                   % (prog, __version__),
+                                   description=_description)
+    parser.add_option("-n", "--dry-run", dest="dry", action="store_true",
+                      help="perform a trial run with no changes made")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+                      help="print process information")
+    (options, args) = parser.parse_args()
+    nfiles = len(args)
+    if nfiles >= 2:
+        zeros = int(math.log10(nfiles)) + 1
+        fmt = "%%0%dd" % zeros
+        name, ext = os.path.splitext(args.pop(-1))
+        moves = [(file, name + fmt % i + ext)
+                 for i, file in enumerate(args) if os.path.isfile(file)]
+        if not moves:
+            print("No such file or directory.", file=sys.stderr)
+        if options.dry:
+            for old, new in moves:
+                print("mv", old, new)
+        else:
+            for old, new in moves:
+                if options.verbose:
+                    print("mv", old, new)
+                os.rename(old, new)
+    else:
+        parser.error("missing argument.")
